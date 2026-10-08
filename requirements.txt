@@ -9,3 +9,5 @@ sqlalchemy==2.0.27
 psycopg2-binary
 pgvector==0.2.5
 python-dotenv==1.0.1
+prometheus-fastapi-instrumentator==7.0.0
+python-logging-loki==0.3.1
