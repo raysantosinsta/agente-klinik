@@ -1,5 +1,8 @@
+from pathlib import Path
 from dotenv import load_dotenv
 
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=env_path)
 load_dotenv()
 
 from fastapi import FastAPI, HTTPException
@@ -48,6 +51,7 @@ class MessagePayload(BaseModel):
 class WebhookResponse(BaseModel):
     status: str
     reply: Optional[str] = None
+    intention: Optional[str] = None
     human_intervention_needed: bool = False
 
 @app.post("/webhook", response_model=WebhookResponse)
@@ -69,6 +73,7 @@ async def handle_message(payload: MessagePayload):
             message=payload.message
         )
         logger.info(f"✅ [PROCESSAMENTO CONCLUÍDO COM SUCESSO]")
+        logger.info(f"   🎯 Intenção: {result.get('intention')}")
         logger.info(f"   🤖 Resposta gerada: \"{result.get('reply')}\"")
         logger.info(f"   🆘 Intervenção humana necessária: {result.get('human_intervention_needed', False)}")
         print("="*50 + "\n")
@@ -76,12 +81,22 @@ async def handle_message(payload: MessagePayload):
         return WebhookResponse(
             status="success",
             reply=result.get("reply"),
+            intention=result.get("intention"),
             human_intervention_needed=result.get("human_intervention_needed", False)
         )
     except Exception as e:
         logger.error(f"❌ [ERRO NO PROCESSAMENTO]: {str(e)}", exc_info=True)
         print("="*50 + "\n")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/")
+def root():
+    return {
+        "status": "online",
+        "service": "Klinik Multi-Agent AI",
+        "docs": "http://localhost:8000/docs",
+        "health": "http://localhost:8000/health"
+    }
 
 @app.get("/health")
 def health_check():
